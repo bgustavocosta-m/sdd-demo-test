@@ -150,3 +150,134 @@ a.game-card:focus-visible {
   font-size: 40px;
   line-height: 1.5;
 }
+
+button {
+  font: inherit;
+  padding: 8px 20px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 16px 32px;
+}
+
+.player-form input:not([type='radio']) {
+  font: inherit;
+  margin-left: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 48px);
+  gap: 8px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.emoji-grid legend {
+  margin-bottom: 8px;
+}
+
+.emoji-grid label {
+  font-size: 28px;
+  line-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.emoji-grid label.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.emoji-grid input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.emoji-grid label:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+}
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.share-link code {
+  user-select: all;
+  word-break: break-all;
+}
+
+.players {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px 8px;
+}
+
+.player {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.player.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.status {
+  margin: 12px 0 16px;
+  color: var(--text-h);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 88px);
+  gap: 8px;
+  justify-content: center;
+}
+
+.cell {
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  font-size: 44px;
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.cell:not(:disabled):hover {
+  background: var(--accent-bg);
+}
