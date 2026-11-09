@@ -109,3 +109,44 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.game-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 0 16px 32px;
+}
+
+.game-card {
+  box-sizing: border-box;
+  width: 240px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+a.game-card:hover,
+a.game-card:focus-visible {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  box-shadow: var(--shadow);
+}
+
+.game-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.game-card-icon {
+  font-size: 40px;
+  line-height: 1.5;
+}
