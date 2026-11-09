@@ -1,5 +1,8 @@
 .claude/settings.local.json
-init-prompt.md# Logs
+.claude/worktrees/
+init-prompt.md
+
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -23,5 +26,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-init-prompt.md
