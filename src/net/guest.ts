@@ -1,9 +1,13 @@
-import { Peer, type DataConnection } from 'peerjs'
+import { Peer } from 'peerjs'
 import type { Player } from '../game/player'
-import { isMsg, type Msg, type StateMsg } from './protocol'
+import { link, onPagehide, type Link } from './link'
+import type { StateMsg } from './protocol'
 import { createStore } from './store'
 
-export type GuestSnapshot = { phase: 'connecting' } | { phase: 'playing'; state: StateMsg }
+export type GuestSnapshot =
+  | { phase: 'connecting' }
+  | { phase: 'playing'; state: StateMsg }
+  | { phase: 'opponent-left' }
 
 export type GuestSession = {
   roomId: string
@@ -11,6 +15,8 @@ export type GuestSession = {
   subscribe: (listener: () => void) => () => void
   move: (cell: number) => void
   restart: () => void
+  /** Sends `bye` and destroys the Peer. The caller navigates home. */
+  leave: () => void
 }
 
 let current: GuestSession | null = null
@@ -24,24 +30,25 @@ export function joinRoom(roomId: string, me: Player): GuestSession {
 function createGuestSession(roomId: string, me: Player): GuestSession {
   const store = createStore<GuestSnapshot>({ phase: 'connecting' })
   const peer = new Peer()
-  let conn: DataConnection | null = null
-
-  // send() before 'open' drops the message, so only send on an open channel (#2).
-  const send = (msg: Msg) => {
-    if (conn?.open) conn.send(msg)
-  }
+  let host: Link | null = null
+  const unlisten = onPagehide(() => host?.send({ type: 'bye' }), () => peer.destroy())
 
   peer.on('open', () => {
-    conn = peer.connect(roomId, { reliable: true, serialization: 'json' })
-    conn.on('open', () => send({ type: 'join', name: me.name, emoji: me.emoji }))
-    conn.on('data', (data) => {
-      if (!isMsg(data)) {
-        console.warn('Dropped malformed message', data)
-        return
-      }
-      // The guest never changes its board itself; it renders the host's snapshot (#4).
-      if (data.type === 'state') store.set({ phase: 'playing', state: data })
-    })
+    const conn = peer.connect(roomId, { reliable: true, serialization: 'json' })
+    // link() only sends on an open channel; send() before 'open' drops the message (#2).
+    conn.on('open', () => host?.send({ type: 'join', name: me.name, emoji: me.emoji }))
+    host = link(
+      conn,
+      (msg) => {
+        // The guest never changes its board itself; it renders the host's snapshot (#4).
+        if (msg.type === 'state') store.set({ phase: 'playing', state: msg })
+      },
+      () => {
+        store.set({ phase: 'opponent-left' })
+        unlisten()
+        peer.destroy()
+      },
+    )
   })
   peer.on('error', (err) => console.warn('PeerJS error', err.type))
 
@@ -49,8 +56,15 @@ function createGuestSession(roomId: string, me: Player): GuestSession {
     roomId,
     getSnapshot: store.get,
     subscribe: store.subscribe,
-    move: (cell) => send({ type: 'move', cell }),
+    move: (cell) => host?.send({ type: 'move', cell }),
     // Only asks; the board resets when the host's new state arrives (#4).
-    restart: () => send({ type: 'restart' }),
+    restart: () => host?.send({ type: 'restart' }),
+    leave() {
+      unlisten()
+      host?.send({ type: 'bye' })
+      host?.stop()
+      peer.destroy()
+      current = null
+    },
   }
 }

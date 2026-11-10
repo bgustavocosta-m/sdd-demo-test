@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react'
-import { useLocation, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import Game from '../components/Game'
 import PlayerForm from '../components/PlayerForm'
 import type { Player } from '../game/player'
@@ -28,11 +28,42 @@ function HostRoom({ roomId, me }: { roomId: string; me: Player }) {
   // Idempotent module-level singleton, safe under StrictMode's double render/mount.
   const session: HostSession = getHostSession(roomId, me)
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot)
-  if (snap.phase === 'waiting') return <Waiting roomId={roomId} />
-  return <Game players={snap.players} game={snap.game} me="X" onCell={session.move} onRestart={session.restart} />
+  const leave = useLeave(session.leave)
+  if (snap.phase === 'waiting') return <Waiting roomId={roomId} onLeave={leave} />
+  if (snap.phase === 'opponent-left') return <OpponentLeft />
+  return (
+    <Game
+      players={snap.players}
+      game={snap.game}
+      me="X"
+      onCell={session.move}
+      onRestart={session.restart}
+      onLeave={leave}
+    />
+  )
 }
 
-function Waiting({ roomId }: { roomId: string }) {
+/** Leave sends `bye`, destroys the Peer and goes home (#5). */
+function useLeave(leave: () => void) {
+  const navigate = useNavigate()
+  return () => {
+    leave()
+    navigate('/')
+  }
+}
+
+function OpponentLeft() {
+  return (
+    <section className="opponent-left">
+      <h1>Opponent left</h1>
+      <p>
+        <Link to="/">Back home</Link>
+      </p>
+    </section>
+  )
+}
+
+function Waiting({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
   const link = location.origin + location.pathname + '#/tic-tac-toe/' + roomId
   const [copied, setCopied] = useState(false)
   const copy = () => {
@@ -50,6 +81,9 @@ function Waiting({ roomId }: { roomId: string }) {
       </p>
       <button type="button" onClick={copy}>
         {copied ? 'Copied!' : 'Copy'}
+      </button>{' '}
+      <button type="button" onClick={onLeave}>
+        Leave
       </button>
     </section>
   )
@@ -70,6 +104,17 @@ function GuestRoom({ roomId }: { roomId: string }) {
 
 function GuestGame({ session }: { session: GuestSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const leave = useLeave(session.leave)
   if (snap.phase === 'connecting') return <p className="status">Connecting…</p>
-  return <Game players={snap.state.players} game={snap.state} me="O" onCell={session.move} onRestart={session.restart} />
+  if (snap.phase === 'opponent-left') return <OpponentLeft />
+  return (
+    <Game
+      players={snap.state.players}
+      game={snap.state}
+      me="O"
+      onCell={session.move}
+      onRestart={session.restart}
+      onLeave={leave}
+    />
+  )
 }

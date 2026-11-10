@@ -1,12 +1,14 @@
-import { Peer, type DataConnection } from 'peerjs'
+import { Peer } from 'peerjs'
 import type { Player } from '../game/player'
 import { applyMove, initialState, restart, type GameState } from '../game/rules'
-import { isMsg, type Msg, type Players } from './protocol'
+import { link, onPagehide, type GameMsg, type Link } from './link'
+import type { Players } from './protocol'
 import { createStore } from './store'
 
 export type HostSnapshot =
   | { phase: 'waiting' }
   | { phase: 'playing'; players: Players; game: GameState }
+  | { phase: 'opponent-left' }
 
 export type HostSession = {
   roomId: string
@@ -14,6 +16,8 @@ export type HostSession = {
   subscribe: (listener: () => void) => () => void
   move: (cell: number) => void
   restart: () => void
+  /** Sends `bye` and destroys the Peer. The caller navigates home. */
+  leave: () => void
 }
 
 /**
@@ -31,22 +35,21 @@ export function getHostSession(roomId: string, me: Player): HostSession {
 function createHostSession(roomId: string, me: Player): HostSession {
   const store = createStore<HostSnapshot>({ phase: 'waiting' })
   const peer = new Peer(roomId)
-  let guest: DataConnection | null = null
+  let guest: Link | null = null
 
-  const send = (msg: Msg) => {
-    if (guest?.open) guest.send(msg)
+  const bye = () => {
+    guest?.send({ type: 'bye' })
+    guest?.stop()
+    peer.destroy()
   }
+  const unlisten = onPagehide(() => guest?.send({ type: 'bye' }), () => peer.destroy())
 
   const commit = (players: Players, game: GameState) => {
     store.set({ phase: 'playing', players, game })
-    send({ type: 'state', players, ...game })
+    guest?.send({ type: 'state', players, ...game })
   }
 
-  const onMessage = (data: unknown) => {
-    if (!isMsg(data)) {
-      console.warn('Dropped malformed message', data)
-      return
-    }
+  const onMessage = (data: GameMsg) => {
     const snap = store.get()
     switch (data.type) {
       case 'join':
@@ -85,8 +88,12 @@ function createHostSession(roomId: string, me: Player): HostSession {
   peer.on('connection', (conn) => {
     // Only the first guest is adopted. Turning away a third peer is #13.
     if (guest) return
-    guest = conn
-    conn.on('data', onMessage)
+    guest = link(conn, onMessage, () => {
+      // The room is over: no going back to waiting, and no new guest is adopted.
+      store.set({ phase: 'opponent-left' })
+      unlisten()
+      peer.destroy()
+    })
   })
   peer.on('error', (err) => console.warn('PeerJS error', err.type))
 
@@ -108,6 +115,11 @@ function createHostSession(roomId: string, me: Player): HostSession {
       const snap = store.get()
       if (snap.phase !== 'playing') return
       commit(snap.players, restart(snap.game))
+    },
+    leave() {
+      unlisten()
+      bye()
+      current = null
     },
   }
 }
