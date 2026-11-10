@@ -27,3 +27,4 @@ Settle one decision ticket.
 
 5. **Update the map**: append `- [<title> (#n)](url) — <one-line gist>` under Decisions so far. A new question the spec needs becomes a new ticket (sub-issue, wired). Anything the answer ruled out goes under Out of scope.
 6. Name what's next — the next ticket, or "decisions done; the next run writes the spec". Stop.
+7. If all decisions of the map are now closed, draft an `AGENTS.md` file for the project. open the pull request after the draft is done.
