@@ -281,3 +281,16 @@ button:disabled {
 .cell:not(:disabled):hover {
   background: var(--accent-bg);
 }
+
+.cell.win {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.board.over .cell:not(.win) {
+  opacity: 0.6;
+}
+
+.actions {
+  margin-top: 20px;
+}

@@ -1,6 +1,6 @@
 import { Peer, type DataConnection } from 'peerjs'
 import type { Player } from '../game/player'
-import { applyMove, initialState, type GameState } from '../game/rules'
+import { applyMove, initialState, restart, type GameState } from '../game/rules'
 import { isMsg, type Msg, type Players } from './protocol'
 import { createStore } from './store'
 
@@ -13,6 +13,7 @@ export type HostSession = {
   getSnapshot: () => HostSnapshot
   subscribe: (listener: () => void) => () => void
   move: (cell: number) => void
+  restart: () => void
 }
 
 /**
@@ -68,6 +69,14 @@ function createHostSession(roomId: string, me: Player): HostSession {
         commit(snap.players, next)
         return
       }
+      case 'restart':
+        // Applied whenever it arrives, with no confirmation (#5).
+        if (snap.phase !== 'playing') {
+          console.warn('Ignored restart before join')
+          return
+        }
+        commit(snap.players, restart(snap.game))
+        return
       default:
         return
     }
@@ -94,6 +103,11 @@ function createHostSession(roomId: string, me: Player): HostSession {
         return
       }
       commit(snap.players, next)
+    },
+    restart() {
+      const snap = store.get()
+      if (snap.phase !== 'playing') return
+      commit(snap.players, restart(snap.game))
     },
   }
 }
