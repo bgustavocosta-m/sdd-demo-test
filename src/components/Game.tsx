@@ -3,31 +3,44 @@ import type { Players } from '../net/protocol'
 
 const SYMBOL: Record<Mark, string> = { X: '❌', O: '⭕' }
 
-type Props = { players: Players; game: GameState; me: Mark; onCell: (cell: number) => void }
+type Props = {
+  players: Players
+  game: GameState
+  me: Mark
+  onCell: (cell: number) => void
+  onRestart: () => void
+}
 
-export default function Game({ players, game, me, onCell }: Props) {
-  const myTurn = game.turn === me && game.winner === null
-  const status = myTurn ? 'Your turn' : `${players[game.turn].name}'s turn`
+/** Status line from this player's point of view (#5). */
+function statusText(game: GameState, players: Players, me: Mark): string {
+  if (game.winner === 'draw') return 'Draw'
+  if (game.winner) return game.winner === me ? 'You win!' : `${players[game.winner].name} wins!`
+  return game.turn === me ? 'Your turn' : `${players[game.turn].name}'s turn`
+}
+
+export default function Game({ players, game, me, onCell, onRestart }: Props) {
+  const over = game.winner !== null
+  const myTurn = game.turn === me && !over
 
   return (
     <section className="game">
       <header className="players">
         {(['X', 'O'] as const).map((m) => (
-          <div key={m} className={m === game.turn ? 'player active' : 'player'}>
+          <div key={m} className={!over && m === game.turn ? 'player active' : 'player'}>
             <span aria-hidden="true">{players[m].emoji}</span> {players[m].name} {SYMBOL[m]}
             {m === me && ' (you)'}
           </div>
         ))}
       </header>
       <p className="status" role="status">
-        {status}
+        {statusText(game, players, me)}
       </p>
-      <div className="board">
+      <div className={over ? 'board over' : 'board'}>
         {game.board.map((cell, i) => (
           <button
             key={i}
             type="button"
-            className="cell"
+            className={game.line?.includes(i) ? 'cell win' : 'cell'}
             disabled={!myTurn || cell !== null}
             onClick={() => onCell(i)}
             aria-label={`Cell ${i + 1}${cell ? `: ${cell}` : ''}`}
@@ -36,6 +49,13 @@ export default function Game({ players, game, me, onCell }: Props) {
           </button>
         ))}
       </div>
+      {over && (
+        <p className="actions">
+          <button type="button" onClick={onRestart}>
+            Play again
+          </button>
+        </p>
+      )}
     </section>
   )
 }

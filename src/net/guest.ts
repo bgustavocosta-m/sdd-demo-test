@@ -10,6 +10,7 @@ export type GuestSession = {
   getSnapshot: () => GuestSnapshot
   subscribe: (listener: () => void) => () => void
   move: (cell: number) => void
+  restart: () => void
 }
 
 let current: GuestSession | null = null
@@ -49,5 +50,7 @@ function createGuestSession(roomId: string, me: Player): GuestSession {
     getSnapshot: store.get,
     subscribe: store.subscribe,
     move: (cell) => send({ type: 'move', cell }),
+    // Only asks; the board resets when the host's new state arrives (#4).
+    restart: () => send({ type: 'restart' }),
   }
 }

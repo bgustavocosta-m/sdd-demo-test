@@ -29,7 +29,7 @@ function HostRoom({ roomId, me }: { roomId: string; me: Player }) {
   const session: HostSession = getHostSession(roomId, me)
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot)
   if (snap.phase === 'waiting') return <Waiting roomId={roomId} />
-  return <Game players={snap.players} game={snap.game} me="X" onCell={session.move} />
+  return <Game players={snap.players} game={snap.game} me="X" onCell={session.move} onRestart={session.restart} />
 }
 
 function Waiting({ roomId }: { roomId: string }) {
@@ -71,5 +71,5 @@ function GuestRoom({ roomId }: { roomId: string }) {
 function GuestGame({ session }: { session: GuestSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot)
   if (snap.phase === 'connecting') return <p className="status">Connecting…</p>
-  return <Game players={snap.state.players} game={snap.state} me="O" onCell={session.move} />
+  return <Game players={snap.state.players} game={snap.state} me="O" onCell={session.move} onRestart={session.restart} />
 }
