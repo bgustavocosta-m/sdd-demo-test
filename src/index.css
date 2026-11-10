@@ -292,5 +292,8 @@ button:disabled {
 }
 
 .actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
   margin-top: 20px;
 }

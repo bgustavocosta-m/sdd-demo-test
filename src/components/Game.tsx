@@ -9,6 +9,7 @@ type Props = {
   me: Mark
   onCell: (cell: number) => void
   onRestart: () => void
+  onLeave: () => void
 }
 
 /** Status line from this player's point of view (#5). */
@@ -18,7 +19,7 @@ function statusText(game: GameState, players: Players, me: Mark): string {
   return game.turn === me ? 'Your turn' : `${players[game.turn].name}'s turn`
 }
 
-export default function Game({ players, game, me, onCell, onRestart }: Props) {
+export default function Game({ players, game, me, onCell, onRestart, onLeave }: Props) {
   const over = game.winner !== null
   const myTurn = game.turn === me && !over
 
@@ -49,13 +50,16 @@ export default function Game({ players, game, me, onCell, onRestart }: Props) {
           </button>
         ))}
       </div>
-      {over && (
-        <p className="actions">
+      <p className="actions">
+        {over && (
           <button type="button" onClick={onRestart}>
             Play again
           </button>
-        </p>
-      )}
+        )}
+        <button type="button" onClick={onLeave}>
+          Leave
+        </button>
+      </p>
     </section>
   )
 }
