@@ -10,7 +10,18 @@ export type GameState = {
   line: Line | null
 }
 
-export const other = (m: Mark): Mark => (m === 'X' ? 'O' : 'X')
+export const LINES: readonly Line[] = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+]
+
+export const other =(m: Mark): Mark => (m === 'X' ? 'O' : 'X')
 
 export function initialState(starter: Mark): GameState {
   return { board: Array(9).fill(null), turn: starter, starter, winner: null, line: null }
@@ -24,5 +35,12 @@ export function applyMove(state: GameState, mark: Mark, cell: number): GameState
   if (state.board[cell] !== null) return null
   const board = state.board.slice()
   board[cell] = mark
-  return { ...state, board, turn: other(mark) }
+  const line = LINES.find((l) => l.every((c) => board[c] === mark)) ?? null
+  const winner = line ? mark : board.every((c) => c !== null) ? 'draw' : null
+  return { ...state, board, turn: other(mark), winner, line }
+}
+
+/** A fresh board for the next game; the starter alternates on every restart (#4). */
+export function restart(state: GameState): GameState {
+  return initialState(other(state.starter))
 }
