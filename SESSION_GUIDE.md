@@ -14,7 +14,7 @@ This guide explains how the session is set up, how the skills and the spec work,
 
 ```mermaid
 flowchart LR
-    P["Kickoff prompt<br/>(slide 29)"] --> C
+    P["Kickoff prompt"] --> C
     subgraph Research
         C["/sdd-chart<br/>map + decision tickets"]
         R["/sdd-resolve<br/>one decision at a time"]
@@ -28,7 +28,7 @@ flowchart LR
         D["GitHub Pages<br/>deploy workflow"]
     end
     C --> R --> S --> T --> B --> D
-    R -. "all decisions closed" .-> A["AGENTS.md<br/>(slides 32–33)"]
+    R -. "all decisions closed" .-> A["AGENTS.md"]
     A -.-> B
 ```
 
