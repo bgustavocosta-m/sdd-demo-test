@@ -14,21 +14,21 @@ This guide explains how the session is set up, how the skills and the spec work,
 
 ```mermaid
 flowchart LR
-    P["Kickoff prompt"] --> C
-    subgraph Research
-        C["/sdd-chart<br/>map + decision tickets"]
-        R["/sdd-resolve<br/>one decision at a time"]
+    P["Kickoff prompt<br/><i>Scrum: Product Goal</i>"] --> C
+    subgraph Research ["Research · Scrum: Refinement"]
+        C["/sdd-chart<br/>map + decision tickets<br/><i>Scrum: initial Product Backlog,<br/>open questions as spikes</i>"]
+        R["/sdd-resolve<br/>one decision at a time<br/><i>Scrum: backlog refinement</i>"]
     end
-    subgraph Plan
-        S["/sdd-spec<br/>one spec issue"]
-        T["/sdd-tickets<br/>tracer-bullet build tickets"]
+    subgraph Plan ["Plan · Scrum: Sprint Planning"]
+        S["/sdd-spec<br/>one spec issue<br/><i>Scrum: refined item,<br/>Definition of Ready</i>"]
+        T["/sdd-tickets<br/>tracer-bullet build tickets<br/><i>Scrum: Sprint Backlog</i>"]
     end
-    subgraph "Build · Verify · Deliver"
-        B["/sdd-build<br/>one ticket → one PR"]
-        D["GitHub Pages<br/>deploy workflow"]
+    subgraph Build ["Build · Verify · Deliver · Scrum: Sprint"]
+        B["/sdd-build<br/>one ticket → one PR<br/><i>Scrum: development work</i>"]
+        D["GitHub Pages<br/>deploy workflow<br/><i>Scrum: release of the Increment</i>"]
     end
     C --> R --> S --> T --> B --> D
-    R -. "all decisions closed" .-> A["AGENTS.md"]
+    R -. "all decisions closed" .-> A["AGENTS.md<br/><i>Scrum: working agreements,<br/>Definition of Done</i>"]
     A -.-> B
 ```
 
